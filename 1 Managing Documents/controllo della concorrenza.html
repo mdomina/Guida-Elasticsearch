@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controllo della concorenza</title>
+</head>
+<body>
+    <h1> #2 Controllo della concorenza</h1>
+    <hr>
+    <p>
+        Il controllo della concorrenza è essenziale per impedire che una vecchia versione del documento sovrascriva una verione più recente.
+        Dal momento che Elasticsearch è distribuito, e viene coinvolto il networking, questo scenario non è così raro. Facciamo un esempio: un utente che chiameremo "A" di un
+        ecommerce ha aggiunto un articolo al carrello e completato il pagamento. Quando avviene questa operazione l'applicazione recupera da Elasticsearch il documento del prodotto.
+        Nello stesso momento un altro utente "B" ha comprato lo stesso prodotto e un thread diverso ha recuperato lo stesso documento di Elasticsearch, il primo thread "A"
+        sottrae 1 dal campo "in_stock" e aggiorna il documeto. Il secondo thread "B" fà la stessa cosa e qui ci troviamo nei guai, perchè "B" non sà che "A" ha modificato il documento quindi il valore di "in_stock"
+        non è quello aggiornato. Quando "B" aggiorna il documento del prodotto lo fà con dei valori sbagliati e questo può causare diversi problemi.
+    </p>
+    <p>
+        Qui entra in gioco il controllo delle versioni. Quando recuperiamo dei dati da Elasticsearch nel documento vengono inclusi 2 valori "_primary_term" e 
+        "_seq_no" nei risultati. Per modificare, in sicurezza, un documento bisogna inserire questi valori nella richiesta POST, Elasticsearch userà questi 2 valori per controllare
+        che una vecchia versione non ne sovrascriva una nuova. Es: <br><br>
+        POST /prodotti/_update/100?if__primary_term=1&if_seq_no=5
+    </p>
+    <p>
+        Facciamo un esempio pratico. 
+    </p>
+    <p>
+        1) creiamo un indice "prodotti" e un documento con i valori prezzo, nome, in_stock.
+    </p>
+    <p>
+        richiesta: <br>
+        POST /prodotti/_doc/100 <br>
+        {
+          "prezzo": 50,
+          "nome": "scarpe",
+          "in_stock": 7
+        }
+    </p>
+    <p>
+        risposta: <br>
+        {
+            "_index" : "prodotti",
+            "_type" : "_doc",
+            "_id" : "100",
+            "_version" : 1,
+            "result" : "created",
+            "_shards" : {
+              "total" : 2,
+              "successful" : 1,
+              "failed" : 0
+            },
+            "_seq_no" : 0,
+            "_primary_term" : 1
+          }
+    </p>
+    <p>
+        2) aggiorniamo in modo <b>corretto</b> il documento. 
+    </p>
+    <p>
+        richiesta: <br>
+        POST /prodotti/_update/100?if_primary_term=1&if_seq_no=0 <br>
+        { <br>
+        "doc":{
+            "in_stock": 6
+        } <br>
+        }
+    </p>
+    <p>
+        risposta: <br>
+        {
+            "_index" : "prodotti",
+            "_type" : "_doc",
+            "_id" : "100",
+            "_version" : 2,
+            "result" : "updated",
+            "_shards" : {
+              "total" : 2,
+              "successful" : 1,
+              "failed" : 0
+            },
+            "_seq_no" : 1,
+            "_primary_term" : 1
+          } <br><br>
+        Come si può notare il valore "_seq_no" è cabiato 0 --> 1. Se dovessimo inviare un altra POST con gli stessi valori Elasticsearch ripsonderebbe con un errore.
+        
+    </p>
+</body>
+</html>

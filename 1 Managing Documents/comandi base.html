@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comandi Base</title>
+</head>
+<body>
+    <h1>#1 Lista di comandi base per la gestione dei documenti in Elasticsearch</h1>
+    <hr>
+    <p>
+        <h3>Creare indice</h3> 
+        PUT /<i>nome_indice</i>    
+    </p>
+    <br>
+    <p>
+        <h3>Eliminare indici</h3>
+        DELETE /<i>nome_indice</i>
+    </p>
+    <br>
+    <p>
+        <h3>Aggiungere Documento</h3>
+        POST /<i>nome_indice</i>/_doc 
+        <br>
+        {<br>
+            "key":"value"<br>
+        }        
+    </p>
+    <br>
+    <p>
+        <h3>Richiamare un documento specifico</h3>
+        GET /<i>nome_indice</i>/_doc/<i>id_del_documento</i>
+    </p>
+    <br>
+    <p>
+        <h3>Modifica dei campi di un documento</h3>
+        POST /<i>nome_indice</i>/_update/<i>id_del_documento</i>
+        <br>
+        {<br>
+            "doc": { "campo da modificare": "valore" }<br>
+        }<br>
+            Se il campo non esiste allora Elasticsearch lo aggiungerà automaticamente
+    </p>
+    <br>
+    <p>
+        <h3>Modifica totale di un documento </h3>
+        POST /<i>nome_indice</i>/_doc/<i>id_del_documento</i>
+        <br>
+        {<br>
+            "key":"value" <br>
+        }<br>
+            Se il campo non esiste allora Elasticsearch lo aggiungerà automaticamente
+    </p>
+    <br>
+    <p>
+        <h3>Eliminare documenti</h3>
+        DELETE /<i>nome_indice</i>/_doc/<i>id_del_documento</i>
+    </p>
+
+</body>
+</html>
